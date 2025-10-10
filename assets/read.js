@@ -1,5 +1,6 @@
 (async function () {
     const GBKDecoder = new TextDecoder('gbk');
+    const UTF8Decoder = new TextDecoder();
     const EMV_AID2NAME = [
         ['A000000333010101', 'UPDebit'],
         ['A000000333010102', 'UPCredit'],
@@ -54,6 +55,10 @@
 
     let ParseGBKText = (hexStr) => {
         return GBKDecoder.decode(hex2buf(hexStr));
+    };
+
+    let ParseUTF8Text = (hexStr) => {
+        return UTF8Decoder.decode(hex2buf(hexStr));
     };
 
     let ExtractFromTLV = (hexStr, tagPath) => {
@@ -404,7 +409,7 @@
     let ReadTUnion = async (fci) => {
         let f15 = await BasicInfoFile(fci);
         if (f15 === '') return {};
-        let f17 = await _transceive('00B097000B');
+                let f17 = await _transceive('00B097000B');
         if (!f17.endsWith('9000'))
             return {};
         const balance_atc_trans = await ReadPBOCBalanceATCAndTrans();
@@ -417,6 +422,9 @@
         type = (type in TUnionDF11Type) ? TUnionDF11Type[type] : `(${type})`;
         city = (city in UnionPayRegion) ? UnionPayRegion[city] : `(${city})`;
         province = (province in UnionPayRegion) ? UnionPayRegion[province] : `(${province})`;
+        let f16 = await _transceive('00B096000B');
+        // const name = ParseGBKText(f16.slice(4, -4));
+        const name = ParseGBKText(f16.slice(4, -4)) + "(" + f16.slice(4, -4) + ")";
         return {
             'card_type': 'TUnion',
             'card_number': number.replace(/^0+/, ''),
@@ -426,6 +434,7 @@
             'transactions': balance_atc_trans[3],
             'province': province,
             'city': city,
+            'name': name,
             'tu_type': type,
             'issue_date': issue_date,
             'expiry_date': expiry_date,
