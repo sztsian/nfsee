@@ -812,12 +812,13 @@
             if (r.endsWith('900000'))
                 return await ReadChinaID(r.slice(0, 16));
         } else if (tag.standard === "ISO 14443-4 (Type A)") {
+            var returnMap = {};
+            var intCardType = 0;
             // TransBeijing
             let r = await _transceive('00B0840020');
             if (r.endsWith('9000') && r.startsWith('1000')) {
                 return await ReadTransBeijing(r.slice(0, -4));
             }
-
             // MIFARE DESFire GetVersion: 60
             r = await _transceive('9060000000');
             if (r.endsWith('91AF')) {
@@ -827,14 +828,18 @@
             // CityUnion
             r = await _transceive('00A4040009A0000000038698070100');
             if (r.endsWith('9000')) {
-                return await ReadCityUnion(r.slice(0, -4));
+                const [cityUnionMap] = await Promise.all([ReadCityUnion(r.slice(0, -4))]);
+                returnMap = {... returnMap, ...cityUnionMap};
+                intCardType = intCardType+1;
             }
 
             // TUnion
             r = await _transceive('00A4040008A00000063201010500');
             if (r.endsWith('9000')) {
                 r = r.slice(0, -4);
-                return await ReadTUnion(r);
+                const [tUnionMap] = await Promise.all([ReadTUnion(r)]);
+                returnMap = {... returnMap, ...tUnionMap};
+                intCardType = intCardType+1;
             }
 
             // TransShenzhen / TransWuhan
@@ -845,13 +850,22 @@
                 if (DFName) {
                     const DFNameHex = buf2hex(DFName);
                     // log("DFName in hex: " + DFNameHex);
-                    if (DFNameHex === 'B0C4C3C5CDA8C7AEB0FC')
-                        return await ReadMacauPass(r);
+                    if (DFNameHex === 'B0C4C3C5CDA8C7AEB0FC') {
+                        const [macauPassMap] = await Promise.all([ReadMacauPass(r)]);
+                        returnMap = {... returnMap, ...macauPassMap};
+                        intCardType = intCardType+1;
+                    }
                     DFName = GBKDecoder.decode(DFName);
-                    if (DFName.startsWith('PAY.SZT'))
-                        return await ReadTransShenzhen(r);
-                    else if (DFName.startsWith('AP1.WHCTC'))
-                        return await ReadTransWuhan();
+                    if (DFName.startsWith('PAY.SZT')) {
+                        const [sztMap] = await Promise.all([ReadTransShenzhen(r)]);
+                        returnMap = {... returnMap, ...sztMap};
+                        intCardType = intCardType+1;
+                    }
+                    else if (DFName.startsWith('AP1.WHCTC')) {
+                        const [whtMap] = await Promise.all([ReadTransWuhan()]);
+                        returnMap = {... returnMap, ...whtMap};
+                        intCardType = intCardType+1;
+                    }
                 }
             }
 
@@ -859,7 +873,9 @@
             r = await _transceive('00A40400085041592E4150505900');
             if (r.endsWith('9000')) {
                 r = r.slice(0, -4);
-                return await ReadLingnanTong(r);
+                const [lntMap] = await Promise.all([ReadLingnanTong(r)]);
+                returnMap = {... returnMap, ...lntMap};
+                intCardType = intCardType+1;
             }
 
             // T-Money
@@ -876,8 +892,18 @@
             r = await _transceive('00A404000E325041592E5359532E444446303100');
             if (r.endsWith('9000')) {
                 r = r.slice(0, -4);
-                return await ReadPPSE(r);
+                const [ppseMap] = await Promise.all([ReadPPSE(r)]);
+                if(ppseMap.isNotEmpty) {
+                    returnMap = {... returnMap, ...ppseMap};
+                    intCardType = intCardType+1;
+                }
             }
+
+            if (intCardType > 1) {
+                returnMap['card_type']='CombinedCard';
+            }
+            return returnMap;
+
         } else if (tag.standard === "ISO 14443-4 (Type B)") {
             // THU
             r = await _transceive('00A4040009A0000000038698070100');
