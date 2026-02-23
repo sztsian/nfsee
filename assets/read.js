@@ -279,7 +279,7 @@
         const balance_atc_trans = await ReadPBOCBalanceATCAndTrans();
         return {
             'card_type': 'ShenzhenTong',
-            'card_number': number,
+            'szt_number': number,
             'balance': balance_atc_trans[0],
             'purchase_atc': balance_atc_trans[1],
             'load_atc': balance_atc_trans[2],
@@ -303,7 +303,7 @@
         }
         return {
             'card_type': 'MacauPass',
-            'card_number': number,
+            'macaupass_number': number,
             'balance': balance,
             'purchase_atc': balance_atc_trans[1],
             'load_atc': balance_atc_trans[2],
@@ -329,7 +329,7 @@
         const expiry_date = f15.slice(48, 56);
         return {
             'card_type': 'WuhanTong',
-            'card_number': number,
+            'wht_number': number,
             'balance': balance_atc_trans[0],
             'purchase_atc': balance_atc_trans[1],
             'load_atc': balance_atc_trans[2],
@@ -361,7 +361,7 @@
         return {
             'card_type': 'CityUnion',
             'city': city,
-            'card_number': number,
+            'cu_number': number,
             'balance': balance_atc_trans[0],
             'purchase_atc': balance_atc_trans[1],
             'load_atc': balance_atc_trans[2],
@@ -419,7 +419,7 @@
         province = (province in UnionPayRegion) ? UnionPayRegion[province] : `(${province})`;
         return {
             'card_type': 'TUnion',
-            'card_number': number.replace(/^0+/, ''),
+            'tu_number': number.replace(/^0+/, ''),
             'balance': balance_atc_trans[0],
             'purchase_atc': balance_atc_trans[1],
             'load_atc': balance_atc_trans[2],
@@ -532,7 +532,7 @@
         const balance_atc_trans = await ReadPBOCBalanceATCAndTrans();
         return {
             'card_type': 'LingnanPass',
-            'card_number': number,
+            'lnt_number': number,
             'balance': balance_atc_trans[0],
             'purchase_atc': balance_atc_trans[1],
             'load_atc': balance_atc_trans[2],
@@ -609,7 +609,7 @@
         balance_num = (balance_num - 500) * 10;
         return {
             'card_type': 'Octopus',
-            'card_number': idm_pmm[0],
+            'octopus_number': idm_pmm[0],
             'balance': balance_num,
         };
     };

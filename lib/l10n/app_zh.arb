@@ -146,5 +146,12 @@
     "payload": "载荷",
     "identifier": "标识",
     "unavailable": "不可用",
+    "sztNumber": "深圳通卡号",
+    "macaupassNumber": "澳门通卡号",
+    "whtNumber": "武汉通卡号",
+    "cuNumber": "城市一卡通卡号",
+    "tuNumber": "交通联合卡卡号",
+    "lntNumber": "岭南通卡号",
+    "octopusNumber": "八达通卡号",
     "encoding": "编码"
 }

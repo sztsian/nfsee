@@ -173,6 +173,20 @@ List<Detail> parseCardDetails(Map<String, dynamic> data, BuildContext context) {
 
   // all cards
   addDetail('card_number', S(context).cardNumber, Icons.credit_card);
+  // Shenzhentong cards
+  addDetail('szt_number', S(context).sztNumber, Icons.credit_card);
+  // Macau Pass cards
+  addDetail('macaupass_number', S(context).macaupassNumber, Icons.credit_card);
+  // Wuhantong cards
+  addDetail('wht_number', S(context).whtNumber, Icons.credit_card);
+  // City Union
+  addDetail('cu_number', S(context).cuNumber, Icons.credit_card);
+  // T Union
+  addDetail('tu_number', S(context).tuNumber, Icons.credit_card);
+  // Lingnantong
+  addDetail('lnt_number', S(context).lntNumber, Icons.credit_card);
+  // Octopus
+  addDetail('octopus_number', S(context).octopusNumber, Icons.credit_card);
   // THU
   addDetail('internal_number', S(context).internalNumber, Icons.credit_card);
   // China ID

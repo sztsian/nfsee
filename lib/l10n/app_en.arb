@@ -146,5 +146,12 @@
     "payload": "Payload",
     "identifier": "Identifier",
     "unavailable": "Unavailable",
+    "sztNumber": "Shenzhentong Number",
+    "macaupassNumber": "Macau Pass Number",
+    "whtNumber": "Wuhantong Number",
+    "cuNumber": "City Union Card Number",
+    "tuNumber": "T-Union Card Number",
+    "lntNumber": "Lingnantong Number",
+    "octopusNumber": "Octopus Number",
     "encoding": "Encoding"
 }
