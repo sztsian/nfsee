@@ -44,6 +44,7 @@ enum CardType {
   MifarePlus,
   MifareDESFire,
   MifareClassic,
+  CombinedCard,
   Unknown,
 }
 
@@ -96,6 +97,8 @@ extension CardTypeExtension on CardType? {
         return S(context).mifareDESFire;
       case CardType.MifareClassic:
         return S(context).mifareClassic;
+      case CardType.CombinedCard:
+        return S(context).combinedCard;
       case CardType.Unknown:
       default:
         return S(context).unknown;

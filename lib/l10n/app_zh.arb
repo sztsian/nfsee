@@ -153,5 +153,6 @@
     "tuNumber": "交通联合卡卡号",
     "lntNumber": "岭南通卡号",
     "octopusNumber": "八达通卡号",
+    "combinedCard": "多功能卡",
     "encoding": "编码"
 }

@@ -153,5 +153,6 @@
     "tuNumber": "T-Union Card Number",
     "lntNumber": "Lingnantong Number",
     "octopusNumber": "Octopus Number",
+    "combinedCard": "Multi-purpose card",
     "encoding": "Encoding"
 }
