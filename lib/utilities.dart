@@ -171,6 +171,13 @@ List<Detail> parseCardDetails(Map<String, dynamic> data, BuildContext context) {
     _addDetail(d, details, fieldName, parsedName, icon, transformer);
   }
 
+  // combinedCard support
+  addDetail('card_type1', S(context).cardType1, Icons.credit_card);
+  addDetail('card_number1', S(context).cardNumber, Icons.credit_card);
+  addDetail('card_type2', S(context).cardType1, Icons.credit_card);
+  addDetail('card_number2', S(context).cardNumber, Icons.credit_card);
+  addDetail('card_type3', S(context).cardType1, Icons.credit_card);
+  addDetail('card_number3', S(context).cardNumber, Icons.credit_card);
   // all cards
   addDetail('card_number', S(context).cardNumber, Icons.credit_card);
   // THU
