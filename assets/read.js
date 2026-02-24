@@ -797,6 +797,8 @@
     };
 
     let ReadAnyCard = async (tag) => {
+        var returnMap = { 'card_type': 'Unknown' };
+        var intCardType = 0;
         if (tag.type === "felica" && tag.systemCode === "8008") {
             // Octopus
             return await ReadOctopus();
@@ -827,14 +829,26 @@
             // CityUnion
             r = await _transceive('00A4040009A0000000038698070100');
             if (r.endsWith('9000')) {
-                return await ReadCityUnion(r.slice(0, -4));
+                const cityUnionMap = await ReadCityUnion(r.slice(0, -4));
+                if (cityUnionMap && Object.keys(cityUnionMap).length > 0) {
+                    intCardType = intCardType + 1;
+                    returnMap = { ...returnMap, ...cityUnionMap };
+                    returnMap['card_number' + intCardType] = cityUnionMap['card_number'];
+                    returnMap['card_type' + intCardType] = cityUnionMap['card_type'];
+                }
             }
 
             // TUnion
             r = await _transceive('00A4040008A00000063201010500');
             if (r.endsWith('9000')) {
                 r = r.slice(0, -4);
-                return await ReadTUnion(r);
+                const tUnionMap = await ReadTUnion(r);
+                if (tUnionMap && Object.keys(tUnionMap).length > 0) {
+                    intCardType = intCardType + 1;
+                    returnMap = { ...returnMap, ...tUnionMap };
+                    returnMap['card_number' + intCardType] = tUnionMap['card_number'];
+                    returnMap['card_type' + intCardType] = tUnionMap['card_type'];
+                }
             }
 
             // TransShenzhen / TransWuhan
@@ -845,13 +859,34 @@
                 if (DFName) {
                     const DFNameHex = buf2hex(DFName);
                     // log("DFName in hex: " + DFNameHex);
-                    if (DFNameHex === 'B0C4C3C5CDA8C7AEB0FC')
-                        return await ReadMacauPass(r);
+                    if (DFNameHex === 'B0C4C3C5CDA8C7AEB0FC') {
+                        const macauPassMap = await ReadMacauPass(r);
+                        if (macauPassMap && Object.keys(macauPassMap).length > 0) {
+                            intCardType = intCardType + 1;
+                            returnMap = { ...returnMap, ...macauPassMap };
+                            returnMap['card_number' + intCardType] = macauPassMap['card_number'];
+                            returnMap['card_type' + intCardType] = macauPassMap['card_type'];
+                        }
+                    }
                     DFName = GBKDecoder.decode(DFName);
-                    if (DFName.startsWith('PAY.SZT'))
-                        return await ReadTransShenzhen(r);
-                    else if (DFName.startsWith('AP1.WHCTC'))
-                        return await ReadTransWuhan();
+                    if (DFName.startsWith('PAY.SZT')) {
+                        const sztMap = await ReadTransShenzhen(r);
+                        if (sztMap && Object.keys(sztMap).length > 0) {
+                            intCardType = intCardType + 1;
+                            returnMap = { ...returnMap, ...sztMap };
+                            returnMap['card_number' + intCardType] = sztMap['card_number'];
+                            returnMap['card_type' + intCardType] = sztMap['card_type'];
+                        }
+                    }
+                    else if (DFName.startsWith('AP1.WHCTC')) {
+                        const whtMap = await ReadTransWuhan();
+                        if (whtMap && Object.keys(whtMap).length > 0) {
+                            intCardType = intCardType + 1;
+                            returnMap = { ...returnMap, ...whtMap };
+                            returnMap['card_number' + intCardType] = whtMap['card_number'];
+                            returnMap['card_type' + intCardType] = whtMap['card_type'];
+                        }
+                    }
                 }
             }
 
@@ -859,7 +894,13 @@
             r = await _transceive('00A40400085041592E4150505900');
             if (r.endsWith('9000')) {
                 r = r.slice(0, -4);
-                return await ReadLingnanTong(r);
+                const lntMap = await ReadLingnanTong(r);
+                if (lntMap && Object.keys(lntMap).length > 0) {
+                    intCardType = intCardType + 1;
+                    returnMap = { ...returnMap, ...lntMap };
+                    returnMap['card_number' + intCardType] = lntMap['card_number'];
+                    returnMap['card_type' + intCardType] = lntMap['card_type'];
+                }
             }
 
             // T-Money
@@ -876,8 +917,24 @@
             r = await _transceive('00A404000E325041592E5359532E444446303100');
             if (r.endsWith('9000')) {
                 r = r.slice(0, -4);
-                return await ReadPPSE(r);
+                const ppseMap = await ReadPPSE(r);
+                if (ppseMap && Object.keys(ppseMap).length > 0) {
+                    intCardType = intCardType + 1;
+                    returnMap = { ...returnMap, ...ppseMap };
+                    returnMap['card_number' + intCardType] = ppseMap['card_number'];
+                    returnMap['card_type' + intCardType] = ppseMap['card_type'];
+                }
             }
+
+            if (intCardType == 1) {
+                returnMap['card_number'] = null;
+            } else if (intCardType > 1) {
+                returnMap['card_number'] = null;
+                returnMap['card_type'] = 'CombinedCard';
+            } else {
+                return { 'card_type': 'Unknown' };
+            }
+            return returnMap;
         } else if (tag.standard === "ISO 14443-4 (Type B)") {
             // THU
             r = await _transceive('00A4040009A0000000038698070100');
