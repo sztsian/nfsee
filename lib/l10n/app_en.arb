@@ -146,5 +146,7 @@
     "payload": "Payload",
     "identifier": "Identifier",
     "unavailable": "Unavailable",
-    "encoding": "Encoding"
+    "encoding": "Encoding",
+    "combinedCard": "Multi-purpose card",
+    "cardType": "Card Type"
 }

@@ -797,6 +797,18 @@
     };
 
     let ReadAnyCard = async (tag) => {
+        // for a combined card (multiple cards in one tag)
+        // we need to store the information of each card in the tag
+        // other fields are flattened into returnMap (last values will override previous ones)
+        // TODO: better handling
+        var returnMap = { 'card_type': 'Unknown', 'sub_cards': [] };
+        const addSubCard = (subCard) => {
+            if (subCard && Object.keys(subCard).length > 0) {
+                returnMap['sub_cards'].push(subCard);
+                // flatten the subCard into returnMap
+                returnMap = { ...returnMap, ...subCard };
+            }
+        }
         if (tag.type === "felica" && tag.systemCode === "8008") {
             // Octopus
             return await ReadOctopus();
@@ -827,14 +839,13 @@
             // CityUnion
             r = await _transceive('00A4040009A0000000038698070100');
             if (r.endsWith('9000')) {
-                return await ReadCityUnion(r.slice(0, -4));
+                addSubCard(await ReadCityUnion(r.slice(0, -4)));
             }
 
             // TUnion
             r = await _transceive('00A4040008A00000063201010500');
             if (r.endsWith('9000')) {
-                r = r.slice(0, -4);
-                return await ReadTUnion(r);
+                addSubCard(await ReadTUnion(r.slice(0, -4)));
             }
 
             // TransShenzhen / TransWuhan
@@ -845,39 +856,43 @@
                 if (DFName) {
                     const DFNameHex = buf2hex(DFName);
                     // log("DFName in hex: " + DFNameHex);
-                    if (DFNameHex === 'B0C4C3C5CDA8C7AEB0FC')
-                        return await ReadMacauPass(r);
+                    if (DFNameHex === 'B0C4C3C5CDA8C7AEB0FC') {
+                        addSubCard(await ReadMacauPass(r));
+                    }
                     DFName = GBKDecoder.decode(DFName);
-                    if (DFName.startsWith('PAY.SZT'))
-                        return await ReadTransShenzhen(r);
-                    else if (DFName.startsWith('AP1.WHCTC'))
-                        return await ReadTransWuhan();
+                    if (DFName.startsWith('PAY.SZT')) {
+                        addSubCard(await ReadTransShenzhen(r));
+                    }
+                    else if (DFName.startsWith('AP1.WHCTC')) {
+                        addSubCard(await ReadTransWuhan());
+                    }
                 }
             }
 
             // LingnanTong
             r = await _transceive('00A40400085041592E4150505900');
             if (r.endsWith('9000')) {
-                r = r.slice(0, -4);
-                return await ReadLingnanTong(r);
+                addSubCard(await ReadLingnanTong(r.slice(0, -4)));
             }
 
             // T-Money
-            // TODO 
             r = await _transceive('00A4040007D410000003000100');
             if (r.endsWith('9000')) {
-                console.log("TMoney");
-                r = r.slice(0, -4);
-                return await ReadTMoney(r);
+                addSubCard(await ReadTMoney(r.slice(0, -4)));
             }
 
             // put it here because iOS fails here
             // PPSE
             r = await _transceive('00A404000E325041592E5359532E444446303100');
             if (r.endsWith('9000')) {
-                r = r.slice(0, -4);
-                return await ReadPPSE(r);
+                addSubCard(await ReadPPSE(r.slice(0, -4)));
             }
+
+            // mark as combined card if there are multiple cards in the tag
+            if (returnMap['sub_cards'].length > 1) {
+                returnMap['card_type'] = 'CombinedCard';
+            }
+            return returnMap;
         } else if (tag.standard === "ISO 14443-4 (Type B)") {
             // THU
             r = await _transceive('00A4040009A0000000038698070100');
