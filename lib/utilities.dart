@@ -171,15 +171,21 @@ List<Detail> parseCardDetails(Map<String, dynamic> data, BuildContext context) {
     _addDetail(d, details, fieldName, parsedName, icon, transformer);
   }
 
-  // combinedCard support
-  addDetail('card_type1', S(context).cardType1, Icons.credit_card);
-  addDetail('card_number1', S(context).cardNumber, Icons.credit_card);
-  addDetail('card_type2', S(context).cardType1, Icons.credit_card);
-  addDetail('card_number2', S(context).cardNumber, Icons.credit_card);
-  addDetail('card_type3', S(context).cardType1, Icons.credit_card);
-  addDetail('card_number3', S(context).cardNumber, Icons.credit_card);
-  // all cards
-  addDetail('card_number', S(context).cardNumber, Icons.credit_card);
+  // card number(s)
+  if (d['sub_cards'].length > 1) {
+    for (var c in d['sub_cards']) {
+      final cardType = getEnumFromString<CardType>(CardType.values, c['card_type'] ?? '');
+      details.add(Detail(
+        name: S(context).cardType, value: cardType?.getName(context) ?? '', icon: Icons.credit_card));
+      details.add(Detail(
+        name: S(context).cardNumber, value: c['card_number'] ?? '', icon: Icons.credit_card));
+    }
+    d.remove('card_number'); // prevent duplicate card number
+  } else {
+    addDetail('card_number', S(context).cardNumber, Icons.credit_card);
+  }
+  d.remove('sub_cards');
+
   // THU
   addDetail('internal_number', S(context).internalNumber, Icons.credit_card);
   // China ID

@@ -797,8 +797,18 @@
     };
 
     let ReadAnyCard = async (tag) => {
-        var returnMap = { 'card_type': 'Unknown' };
-        var intCardType = 0;
+        // for a combined card (multiple cards in one tag)
+        // we need to store the information of each card in the tag
+        // other fields are flattened into returnMap (last values will override previous ones)
+        // TODO: better handling
+        var returnMap = { 'card_type': 'Unknown', 'sub_cards': [] };
+        const addSubCard = (subCard) => {
+            if (subCard && Object.keys(subCard).length > 0) {
+                returnMap['sub_cards'].push(subCard);
+                // flatten the subCard into returnMap
+                returnMap = { ...returnMap, ...subCard };
+            }
+        }
         if (tag.type === "felica" && tag.systemCode === "8008") {
             // Octopus
             return await ReadOctopus();
@@ -829,26 +839,13 @@
             // CityUnion
             r = await _transceive('00A4040009A0000000038698070100');
             if (r.endsWith('9000')) {
-                const cityUnionMap = await ReadCityUnion(r.slice(0, -4));
-                if (cityUnionMap && Object.keys(cityUnionMap).length > 0) {
-                    intCardType = intCardType + 1;
-                    returnMap = { ...returnMap, ...cityUnionMap };
-                    returnMap['card_number' + intCardType] = cityUnionMap['card_number'];
-                    returnMap['card_type' + intCardType] = cityUnionMap['card_type'];
-                }
+                addSubCard(await ReadCityUnion(r.slice(0, -4)));
             }
 
             // TUnion
             r = await _transceive('00A4040008A00000063201010500');
             if (r.endsWith('9000')) {
-                r = r.slice(0, -4);
-                const tUnionMap = await ReadTUnion(r);
-                if (tUnionMap && Object.keys(tUnionMap).length > 0) {
-                    intCardType = intCardType + 1;
-                    returnMap = { ...returnMap, ...tUnionMap };
-                    returnMap['card_number' + intCardType] = tUnionMap['card_number'];
-                    returnMap['card_type' + intCardType] = tUnionMap['card_type'];
-                }
+                addSubCard(await ReadTUnion(r.slice(0, -4)));
             }
 
             // TransShenzhen / TransWuhan
@@ -860,32 +857,14 @@
                     const DFNameHex = buf2hex(DFName);
                     // log("DFName in hex: " + DFNameHex);
                     if (DFNameHex === 'B0C4C3C5CDA8C7AEB0FC') {
-                        const macauPassMap = await ReadMacauPass(r);
-                        if (macauPassMap && Object.keys(macauPassMap).length > 0) {
-                            intCardType = intCardType + 1;
-                            returnMap = { ...returnMap, ...macauPassMap };
-                            returnMap['card_number' + intCardType] = macauPassMap['card_number'];
-                            returnMap['card_type' + intCardType] = macauPassMap['card_type'];
-                        }
+                        addSubCard(await ReadMacauPass(r));
                     }
                     DFName = GBKDecoder.decode(DFName);
                     if (DFName.startsWith('PAY.SZT')) {
-                        const sztMap = await ReadTransShenzhen(r);
-                        if (sztMap && Object.keys(sztMap).length > 0) {
-                            intCardType = intCardType + 1;
-                            returnMap = { ...returnMap, ...sztMap };
-                            returnMap['card_number' + intCardType] = sztMap['card_number'];
-                            returnMap['card_type' + intCardType] = sztMap['card_type'];
-                        }
+                        addSubCard(await ReadTransShenzhen(r));
                     }
                     else if (DFName.startsWith('AP1.WHCTC')) {
-                        const whtMap = await ReadTransWuhan();
-                        if (whtMap && Object.keys(whtMap).length > 0) {
-                            intCardType = intCardType + 1;
-                            returnMap = { ...returnMap, ...whtMap };
-                            returnMap['card_number' + intCardType] = whtMap['card_number'];
-                            returnMap['card_type' + intCardType] = whtMap['card_type'];
-                        }
+                        addSubCard(await ReadTransWuhan());
                     }
                 }
             }
@@ -893,46 +872,25 @@
             // LingnanTong
             r = await _transceive('00A40400085041592E4150505900');
             if (r.endsWith('9000')) {
-                r = r.slice(0, -4);
-                const lntMap = await ReadLingnanTong(r);
-                if (lntMap && Object.keys(lntMap).length > 0) {
-                    intCardType = intCardType + 1;
-                    returnMap = { ...returnMap, ...lntMap };
-                    returnMap['card_number' + intCardType] = lntMap['card_number'];
-                    returnMap['card_type' + intCardType] = lntMap['card_type'];
-                }
+                addSubCard(await ReadLingnanTong(r.slice(0, -4)));
             }
 
             // T-Money
-            // TODO 
             r = await _transceive('00A4040007D410000003000100');
             if (r.endsWith('9000')) {
-                console.log("TMoney");
-                r = r.slice(0, -4);
-                return await ReadTMoney(r);
+                addSubCard(await ReadTMoney(r.slice(0, -4)));
             }
 
             // put it here because iOS fails here
             // PPSE
             r = await _transceive('00A404000E325041592E5359532E444446303100');
             if (r.endsWith('9000')) {
-                r = r.slice(0, -4);
-                const ppseMap = await ReadPPSE(r);
-                if (ppseMap && Object.keys(ppseMap).length > 0) {
-                    intCardType = intCardType + 1;
-                    returnMap = { ...returnMap, ...ppseMap };
-                    returnMap['card_number' + intCardType] = ppseMap['card_number'];
-                    returnMap['card_type' + intCardType] = ppseMap['card_type'];
-                }
+                addSubCard(await ReadPPSE(r.slice(0, -4)));
             }
 
-            if (intCardType == 1) {
-                returnMap['card_number'] = null;
-            } else if (intCardType > 1) {
-                returnMap['card_number'] = null;
+            // mark as combined card if there are multiple cards in the tag
+            if (returnMap['sub_cards'].length > 1) {
                 returnMap['card_type'] = 'CombinedCard';
-            } else {
-                return { 'card_type': 'Unknown' };
             }
             return returnMap;
         } else if (tag.standard === "ISO 14443-4 (Type B)") {
