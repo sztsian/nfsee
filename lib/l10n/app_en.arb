@@ -148,5 +148,6 @@
     "unavailable": "Unavailable",
     "encoding": "Encoding",
     "combinedCard": "Multi-purpose card",
-    "cardType": "Card Type"
+    "cardType": "Card Type",
+    "suzhouCitizenCard": "Suzhou Citizen Card"
 }

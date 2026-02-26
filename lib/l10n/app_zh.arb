@@ -148,5 +148,6 @@
     "unavailable": "不可用",
     "encoding": "编码",
     "combinedCard": "多功能卡",
-    "cardType": "卡类型"
+    "cardType": "卡类型",
+    "suzhouCitizenCard": "苏州市民卡"
 }

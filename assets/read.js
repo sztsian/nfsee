@@ -614,6 +614,29 @@
         };
     };
 
+    let ReadSuzhouCitizenCard = async (fci) => {
+        let f15 = await BasicInfoFile(fci);
+        if (f15 === '') return {};
+        const number = f15.slice(0, 16);
+        const issue_date = f15.slice(40, 48);
+        const expiry_date = f15.slice(48, 56);
+        // Suzhou Citizen Card does not support transcation. 
+        // So parse balance directly instead of using ReadPBOCBalanceATCAndTrans.
+        var balance;
+        let rapdu = await _transceive('805C000104');
+        if (rapdu.endsWith('9000')) {
+            balance = parseInt(rapdu.slice(0, 8), 16);
+            console.log(balance);
+        }
+        return {
+            'card_type': 'SuzhouCitizenCard',
+            'card_number': number,
+            'issue_date': issue_date,
+            'expiry_date': expiry_date,
+            'balance': balance,
+        };
+    };
+
     let ReadMifareUltralight = async () => {
         // get version
         let version = await _transceive('60');
@@ -879,6 +902,12 @@
             r = await _transceive('00A4040007D410000003000100');
             if (r.endsWith('9000')) {
                 addSubCard(await ReadTMoney(r.slice(0, -4)));
+            }
+
+            // Suzhou Citizen Card
+            r = await _transceive('00A404000B535558494E2E4444463031');
+            if (r.endsWith('9000')) {
+                addSubCard(await ReadSuzhouCitizenCard(r.slice(0, -4)));
             }
 
             // put it here because iOS fails here
