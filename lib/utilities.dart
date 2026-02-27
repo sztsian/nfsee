@@ -172,7 +172,7 @@ List<Detail> parseCardDetails(Map<String, dynamic> data, BuildContext context) {
   }
 
   // card number(s)
-  if (d['sub_cards'].length > 1) {
+  if (d.containsKey('sub_cards') && d['sub_cards'].length > 1) {
     for (var c in d['sub_cards']) {
       final cardType = getEnumFromString<CardType>(CardType.values, c['card_type'] ?? '');
       details.add(Detail(
